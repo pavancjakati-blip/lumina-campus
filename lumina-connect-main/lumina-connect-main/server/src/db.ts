@@ -1,8 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
-// Unified Path as requested
-const dbPath = 'd:\\crome_downloader\\database.json';
+// Cross-platform Path (works locally and on Render)
+const isProd = process.env.NODE_ENV === 'production';
+// In dev: __dirname is server/src. In prod: __dirname is server/dist.
+// We point it to the frontend's database.json which is checked into Git
+const dbPath = path.join(__dirname, isProd ? '../../src/data/database.json' : '../../src/data/database.json');
 
 export const readDb = () => {
   try {
