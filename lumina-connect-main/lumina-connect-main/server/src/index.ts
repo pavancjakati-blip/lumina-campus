@@ -431,6 +431,28 @@ const checkAttendance = () => {
 // Check attendance polling every 15 minutes
 setInterval(checkAttendance, 15 * 60 * 1000);
 
+// Health check endpoint (used by keep-alive ping)
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Keep-alive ping for Render free-tier (pings every 14 min to prevent sleep)
+if (process.env.NODE_ENV === 'production' && process.env.RENDER_URL) {
+  setInterval(async () => {
+    try {
+      const https = await import('https');
+      https.get(`${process.env.RENDER_URL}/api/health`, (res) => {
+        console.log(`Keep-alive ping: ${res.statusCode}`);
+      }).on('error', (e: Error) => {
+        console.log('Keep-alive error:', e.message);
+      });
+    } catch (e: any) {
+      console.log('Keep-alive failed:', e.message);
+    }
+  }, 14 * 60 * 1000);
+  console.log('Keep-alive ping scheduled every 14 minutes.');
+}
+
 app.listen(port, () => {
   console.log(`Lumina Campus Backend is running on port ${port}`);
 });
