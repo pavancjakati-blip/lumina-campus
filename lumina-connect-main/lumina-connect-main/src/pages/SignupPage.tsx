@@ -53,17 +53,44 @@ export default function SignupPage() {
     setSubjects(prev => prev.filter(s => s.id !== id));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const [submitError, setSubmitError] = useState('');
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (step < 3) {
       setStep(s => s + 1);
     } else {
       setLoading(true);
-      setTimeout(() => {
+      setSubmitError('');
+      try {
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: personalDetails.name,
+            employeeId: personalDetails.id,
+            email: personalDetails.email,
+            mobile: personalDetails.mobile,
+            department: personalDetails.department,
+            designation: personalDetails.designation,
+            password: personalDetails.password,
+            role,
+            subjects
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setSubmitError(data.error || 'Registration failed. Please try again.');
+          setLoading(false);
+          return;
+        }
         setLoading(false);
         setSuccess(true);
         setTimeout(() => navigate('/'), 3000);
-      }, 1500);
+      } catch {
+        setSubmitError('Could not connect to server. Make sure the backend is running.');
+        setLoading(false);
+      }
     }
   };
 
@@ -317,6 +344,10 @@ export default function SignupPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {submitError && (
+                  <p className="text-sm text-destructive mt-4 text-center animate-fade-in">{submitError}</p>
+                )}
 
                 <div className="mt-8 flex justify-between pt-6 border-t border-border">
                   {step > 1 ? (

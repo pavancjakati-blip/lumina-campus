@@ -34,6 +34,90 @@ app.post('/api/auth/login', (req, res) => {
   }
 });
 
+// Signup - Register new faculty
+app.post('/api/auth/signup', (req, res) => {
+  const db = readDb();
+  const { name, employeeId, email, mobile, department, designation, password, role, subjects } = req.body;
+
+  // Check if email already exists
+  const existing = db.faculty.find((f: any) => f.email === email);
+  if (existing) {
+    return res.status(409).json({ error: 'Email already registered' });
+  }
+
+  // Generate new faculty ID
+  const newId = generateId('FAC', db.faculty);
+  const avatar = name.split(' ').filter(Boolean).map((w: string) => w[0].toUpperCase()).slice(0, 2).join('');
+  const joinedYear = new Date().getFullYear().toString();
+
+  const newFaculty = {
+    id: newId,
+    name,
+    email,
+    password,
+    role: role?.toLowerCase() === 'hod' ? 'HOD' : 'Faculty',
+    department: department || 'AIML',
+    departmentId: 'DEPT001',
+    designation: designation || 'Assistant Professor',
+    employeeId: employeeId || newId,
+    mobile: mobile || '',
+    gender: 'Male',
+    dateOfBirth: '',
+    joinedYear,
+    avatar
+  };
+
+  db.faculty.push(newFaculty);
+
+  // Add default leave balance
+  db.leaveBalance.push({
+    facultyId: newId,
+    casualLeave: { total: 10, used: 0, remaining: 10 },
+    medicalLeave: { total: 5, used: 0, remaining: 5 },
+    dutyLeave: { total: 5, used: 0, remaining: 5 },
+    compensatoryLeave: { total: 3, used: 0, remaining: 3 }
+  });
+
+  // Add subjects if provided
+  if (subjects && Array.isArray(subjects)) {
+    subjects.forEach((subj: any) => {
+      // Try to find existing subject by code
+      let existingSubject = db.subjects.find((s: any) => s.code === subj.code);
+      let subjectId: string;
+
+      if (!existingSubject) {
+        // Create new subject
+        subjectId = generateId('SUB', db.subjects);
+        db.subjects.push({
+          id: subjectId,
+          code: subj.code || subjectId,
+          name: subj.name,
+          semester: `Sem ${subj.semester}`,
+          type: subj.type || 'Theory',
+          credits: 3,
+          ltp: subj.type === 'Lab' ? '0-0-2' : '3-0-0',
+          departmentId: 'DEPT001'
+        });
+      } else {
+        subjectId = existingSubject.id;
+      }
+
+      db.facultySubjects.push({
+        id: generateId('FS', db.facultySubjects),
+        facultyId: newId,
+        subjectId,
+        section: subj.section ? `AIML-${subj.section}` : 'AIML-A',
+        semester: `Sem ${subj.semester}`,
+        academicYear: '2025-26',
+        room: subj.classroom || 'TBD'
+      });
+    });
+  }
+
+  writeDb(db);
+  res.json({ success: true, faculty: newFaculty });
+});
+
 // Initialization
 app.post('/api/faculty/initialize', (req, res) => {
   const db = readDb();
