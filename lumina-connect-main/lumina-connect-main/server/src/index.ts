@@ -34,25 +34,123 @@ app.use(cors({
 app.use(express.json());
 
 // Auth & Cold Start Logic
+
+// Mock token generator just for this fix
+const generateToken = (id: string) => `jwt-token-${id}-${Date.now()}`;
+
+app.get('/api/debug/faculty-list', (req, res) => {
+  try {
+    const db = readDb();
+    // Using db.faculty since readDb() returns luminaCampusDB inner object
+    const facultyEmails = db.faculty.map(
+      (f: any) => ({ 
+        email: f.email, 
+        role: f.role,
+        name: f.name 
+      })
+    );
+    res.json({ 
+      count: facultyEmails.length, 
+      faculty: facultyEmails 
+    });
+  } catch (err: any) {
+    res.status(500).json({ 
+      error: err.message,
+      stack: err.stack 
+    });
+  }
+});
+
+app.post('/api/debug/test-login', (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const db = readDb();
+    const faculty = db.faculty.find(
+      (f: any) => f.email.toLowerCase() === email.toLowerCase()
+    );
+    res.json({
+      emailProvided: email,
+      facultyFound: !!faculty,
+      facultyName: faculty?.name || 'NOT FOUND',
+      passwordMatch: faculty?.password === password,
+      storedPassword: faculty?.password || 'NO PASSWORD STORED',
+      totalFaculty: db.faculty.length
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/auth/login', (req, res) => {
-  const { email, password, role } = req.body;
-  const db = readDb();
-  const targetRole = role?.toLowerCase() === 'hod' ? 'HOD' : 'Faculty';
-  // Match by email + password + role
-  const user = db.faculty.find((f: any) => f.email === email && f.password === password && f.role === targetRole);
-  
-  if (user) {
-    // Check if facultyId exists in leaveBalance and facultySubjects
-    const hasLeaveBalance = db.leaveBalance.some((lb: any) => lb.facultyId === user.id);
-    const hasSubjects = db.facultySubjects.some((fs: any) => fs.facultyId === user.id);
+  try {
+    const { email, password, role } = req.body;
     
-    if (!hasLeaveBalance && !hasSubjects) {
-      return res.json({ ...user, setup_required: true });
+    console.log('Login attempt:', { email, role });
+    
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email and password required' 
+      });
     }
     
-    res.json(user);
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
+    const db = readDb();
+    const faculty = db.faculty.find(
+      (f: any) => f.email.toLowerCase().trim() === 
+                  email.toLowerCase().trim()
+    );
+    
+    console.log('Faculty found:', faculty ? faculty.name : 'NOT FOUND');
+    console.log('Total faculty in DB:', db.faculty?.length || 0);
+    
+    if (!faculty) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'No account found with this email address' 
+      });
+    }
+    
+    if (faculty.password !== password) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Incorrect password' 
+      });
+    }
+    
+    if (role && faculty.role.toLowerCase() !== role.toLowerCase()) {
+      return res.status(401).json({ 
+        success: false, 
+        error: `This account is registered as ${faculty.role}, not ${role}. Please select the correct role.` 
+      });
+    }
+    
+    const token = generateToken(faculty.id);
+    
+    console.log('Login successful for:', faculty.name);
+    
+    // Spread faculty to avoid breaking existing UI that expects root props
+    return res.json({
+      ...faculty,
+      success: true,
+      token,
+      faculty: {
+        id: faculty.id,
+        name: faculty.name,
+        email: faculty.email,
+        role: faculty.role,
+        department: faculty.department,
+        designation: faculty.designation,
+        employeeId: faculty.employeeId,
+        mobile: faculty.mobile,
+        avatar: faculty.avatar
+      }
+    });
+  } catch (err: any) {
+    console.error('Login error:', err);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Server error during login: ' + err.message 
+    });
   }
 });
 

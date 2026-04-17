@@ -2,18 +2,19 @@ import fs from 'fs';
 import path from 'path';
 
 // Cross-platform Path (works locally and on Render)
-const isProd = process.env.NODE_ENV === 'production';
-// In dev: __dirname is server/src. In prod: __dirname is server/dist.
-// We point it to the frontend's database.json which is checked into Git
-const dbPath = path.join(__dirname, isProd ? '../../src/data/database.json' : '../../src/data/database.json');
+const DB_PATH = path.join(__dirname, 'data', 'database.json');
 
 export const readDb = () => {
   try {
-    const data = fs.readFileSync(dbPath, 'utf8');
-    return JSON.parse(data).luminaCampusDB;
-  } catch (error) {
-    console.error("Error reading database:", error);
-    return null;
+    console.log('Reading DB from:', DB_PATH);
+    const raw = fs.readFileSync(DB_PATH, 'utf-8');
+    return JSON.parse(raw).luminaCampusDB;
+  } catch (err: any) {
+    console.error('DB READ ERROR:', err.message);
+    console.error('Tried path:', DB_PATH);
+    console.error('__dirname:', __dirname);
+    console.error('process.cwd():', process.cwd());
+    throw new Error('Cannot read database: ' + err.message);
   }
 };
 
@@ -21,9 +22,9 @@ export const readDb = () => {
 export const writeDb = (data: any) => {
   try {
     const dbData = { luminaCampusDB: data };
-    const tempPath = `${dbPath}.tmp`;
+    const tempPath = `${DB_PATH}.tmp`;
     fs.writeFileSync(tempPath, JSON.stringify(dbData, null, 2), 'utf8');
-    fs.renameSync(tempPath, dbPath);
+    fs.renameSync(tempPath, DB_PATH);
   } catch (error) {
     console.error("Error writing database atomically:", error);
   }
