@@ -29,13 +29,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
     if (email && password) {
-      const userDoc = await getAuthenticatedFaculty(email, password, role);
-      if (userDoc) {
-        setUser({
-          ...userDoc,
-          role: userDoc.role.toLowerCase() as UserRole,
-        });
-        return true;
+      try {
+        const userDoc = await getAuthenticatedFaculty(email, password, role);
+        if (userDoc) {
+          setUser({
+            ...userDoc,
+            role: userDoc.role.toLowerCase() as UserRole,
+          });
+          return true;
+        }
+      } catch (err: any) {
+        throw err;
       }
     }
     return false;

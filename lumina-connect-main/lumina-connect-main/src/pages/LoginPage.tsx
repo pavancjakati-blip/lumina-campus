@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, GraduationCap, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getApiBase } from '@/data/dataService';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -22,8 +23,12 @@ export default function LoginPage() {
     if (!email.trim()) { setError('Email is required'); return; }
     if (!password.trim()) { setError('Password is required'); return; }
     setLoading(true);
-    const success = await login(email, password, role);
-    if (!success) setError('Invalid credentials');
+    try {
+      const success = await login(email, password, role);
+      if (!success) setError('Invalid credentials');
+    } catch (err: any) {
+      setError(`Error: ${err.message} [API: ${getApiBase()}]`);
+    }
     setLoading(false);
   };
 

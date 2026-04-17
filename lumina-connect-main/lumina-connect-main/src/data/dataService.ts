@@ -1,13 +1,21 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
+export const getApiBase = () => API_BASE;
 
 export async function getAuthenticatedFaculty(email: string, password: string, role: string) {
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, role })
-  });
-  if (!res.ok) return null;
-  return await res.json();
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, role })
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Server ${res.status}: ${errText}`);
+    }
+    return await res.json();
+  } catch (err: any) {
+    throw new Error(err.message || 'Network error');
+  }
 }
 
 export async function getFacultyTodaySchedule(facultyId: string) {
