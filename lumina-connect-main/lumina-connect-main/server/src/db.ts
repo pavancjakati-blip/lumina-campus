@@ -1,30 +1,80 @@
 import fs from 'fs';
 import path from 'path';
 
-// Cross-platform Path (works locally and on Render)
-const DB_PATH = path.join(__dirname, 'data', 'database.json');
+const findDbPath = (): string => {
+  const candidates = [
+    path.join(__dirname, 'data', 'database.json'),
+    path.join(__dirname, '..', 'data', 'database.json'),
+    path.join(__dirname, 'src', 'data', 'database.json'),
+    path.join(__dirname, '..', 'src', 'data', 'database.json'),
+    path.join(process.cwd(), 'data', 'database.json'),
+    path.join(process.cwd(), 'src', 'data', 'database.json'),
+    path.join(process.cwd(), 'dist', 'data', 'database.json'),
+    path.join(process.cwd(), 'dist', 'src', 'data', 'database.json'),
+    'data/database.json',
+    'src/data/database.json',
+    'database.json'
+  ];
+  
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      console.log('Found database at:', candidate);
+      return candidate;
+    }
+  }
+  
+  console.error('DATABASE NOT FOUND. Tried:');
+  candidates.forEach(c => console.error(' -', c));
+  throw new Error('database.json not found in any expected location');
+};
+
+console.log('=== DATABASE PATH DEBUG ===');
+console.log('__dirname:', __dirname);
+console.log('process.cwd():', process.cwd());
+try {
+  const DB_PATH = findDbPath();
+  console.log('DB_PATH:', DB_PATH);
+  const exists = fs.existsSync(DB_PATH);
+  console.log('DB file exists:', exists);
+  if (exists) {
+    const raw = fs.readFileSync(DB_PATH, 'utf-8');
+    const parsed = JSON.parse(raw);
+    const facultyCount = parsed?.luminaCampusDB?.faculty?.length || parsed?.faculty?.length || 0;
+    console.log('Faculty count in DB:', facultyCount);
+  }
+} catch(e: any) {
+  console.log('DB check error:', e.message);
+}
+console.log('===========================');
 
 export const readDb = () => {
-  try {
-    console.log('Reading DB from:', DB_PATH);
-    const raw = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(raw).luminaCampusDB;
-  } catch (err: any) {
-    console.error('DB READ ERROR:', err.message);
-    console.error('Tried path:', DB_PATH);
-    console.error('__dirname:', __dirname);
-    console.error('process.cwd():', process.cwd());
-    throw new Error('Cannot read database: ' + err.message);
-  }
+  const dbPath = findDbPath();
+  const raw = fs.readFileSync(dbPath, 'utf-8');
+  const parsed = JSON.parse(raw);
+  // Preserving backward compatibility - unwrap the inner DB object
+  // so that db.faculty works throughout index.ts without crashing
+  return parsed.luminaCampusDB ? parsed.luminaCampusDB : parsed;
 };
 
 // Atomic Write Strategy
 export const writeDb = (data: any) => {
   try {
-    const dbData = { luminaCampusDB: data };
-    const tempPath = `${DB_PATH}.tmp`;
+    const dbPath = findDbPath();
+    
+    let originalRaw = '{}';
+    if (fs.existsSync(dbPath)) originalRaw = fs.readFileSync(dbPath, 'utf-8');
+    let dbData = data;
+    
+    // Determine if original json was wrapped in luminaCampusDB
+    try {
+      if (JSON.parse(originalRaw).luminaCampusDB) {
+        dbData = { luminaCampusDB: data };
+      }
+    } catch(e) {}
+    
+    const tempPath = `${dbPath}.tmp`;
     fs.writeFileSync(tempPath, JSON.stringify(dbData, null, 2), 'utf8');
-    fs.renameSync(tempPath, DB_PATH);
+    fs.renameSync(tempPath, dbPath);
   } catch (error) {
     console.error("Error writing database atomically:", error);
   }

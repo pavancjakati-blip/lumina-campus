@@ -6,7 +6,8 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "dev": "nodemon src/index.ts",
-    "build": "tsc && cp -r src/data dist/data"
+    "build": "tsc && cp -r src/data dist/src/data || cp -r data dist/data || true",
+    "postbuild": "node -e \"const fs = require('fs'); const path = require('path'); const possibleSrc = ['src/data/database.json', 'data/database.json', 'database.json']; const possibleDest = ['dist/src/data', 'dist/data', 'dist']; for (const src of possibleSrc) { if (fs.existsSync(src)) { console.log('Found DB at:', src); for (const dest of possibleDest) { try { if (!fs.existsSync(dest)) fs.mkdirSync(dest, {recursive:true}); fs.copyFileSync(src, path.join(dest, 'database.json')); console.log('Copied to:', dest); } catch(e) {} } break; } }\""
   },
   "dependencies": {
     "cors": "^2.8.5",

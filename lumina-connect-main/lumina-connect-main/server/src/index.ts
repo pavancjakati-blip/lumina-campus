@@ -41,22 +41,29 @@ const generateToken = (id: string) => `jwt-token-${id}-${Date.now()}`;
 app.get('/api/debug/faculty-list', (req, res) => {
   try {
     const db = readDb();
-    // Using db.faculty since readDb() returns luminaCampusDB inner object
-    const facultyEmails = db.faculty.map(
-      (f: any) => ({ 
-        email: f.email, 
+    const faculty = db.luminaCampusDB?.faculty || 
+                    db.faculty || 
+                    [];
+    res.json({
+      success: true,
+      totalFound: faculty.length,
+      dbKeys: Object.keys(db),
+      nestedKeys: db.luminaCampusDB ? 
+                  Object.keys(db.luminaCampusDB) : 'no luminaCampusDB key',
+      faculty: faculty.map((f: any) => ({
+        name: f.name,
+        email: f.email,
         role: f.role,
-        name: f.name 
-      })
-    );
-    res.json({ 
-      count: facultyEmails.length, 
-      faculty: facultyEmails 
+        hasPassword: !!f.password,
+        password: f.password
+      }))
     });
   } catch (err: any) {
-    res.status(500).json({ 
+    res.status(500).json({
+      success: false,
       error: err.message,
-      stack: err.stack 
+      cwd: process.cwd(),
+      dirname: __dirname
     });
   }
 });
@@ -113,14 +120,14 @@ app.post('/api/auth/login', (req, res) => {
     if (faculty.password !== password) {
       return res.status(401).json({ 
         success: false, 
-        error: 'Incorrect password' 
+        error: 'Incorrect password. Default password is faculty123' 
       });
     }
     
     if (role && faculty.role.toLowerCase() !== role.toLowerCase()) {
       return res.status(401).json({ 
         success: false, 
-        error: `This account is registered as ${faculty.role}, not ${role}. Please select the correct role.` 
+        error: `Wrong role selected. This account is "${faculty.role}". Please select "${faculty.role}" on the login screen.` 
       });
     }
     
