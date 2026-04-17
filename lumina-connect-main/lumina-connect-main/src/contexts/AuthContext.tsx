@@ -25,7 +25,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const facultyStr = localStorage.getItem('lumina_faculty');
+      if (facultyStr) {
+        const parsed = JSON.parse(facultyStr);
+        return {
+          ...parsed,
+          role: (parsed.role || 'faculty').toLowerCase() as UserRole
+        };
+      }
+    } catch {
+      localStorage.removeItem('lumina_token');
+      localStorage.removeItem('lumina_faculty');
+    }
+    return null;
+  });
 
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
     if (email && password) {
@@ -58,7 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    localStorage.removeItem('lumina_token');
+    localStorage.removeItem('lumina_faculty');
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>

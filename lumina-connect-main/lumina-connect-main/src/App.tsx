@@ -23,46 +23,79 @@ import { AnimatePresence } from "framer-motion";
 
 const queryClient = new QueryClient();
 
+const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode, requiredRole?: string }) => {
+  const token = localStorage.getItem('lumina_token');
+  const facultyStr = localStorage.getItem('lumina_faculty');
+  
+  if (!token || !facultyStr) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  try {
+    const faculty = JSON.parse(facultyStr);
+    if (requiredRole && faculty.role?.toLowerCase() !== requiredRole.toLowerCase()) {
+      // Redirect to correct dashboard based on actual role
+      if (faculty.role?.toLowerCase() === 'hod') {
+        return <Navigate to="/hod" replace />;
+      } else {
+        return <Navigate to="/faculty" replace />;
+      }
+    }
+    return <>{children}</>;
+  } catch {
+    localStorage.removeItem('lumina_token');
+    localStorage.removeItem('lumina_faculty');
+    return <Navigate to="/login" replace />;
+  }
+};
+
 function AppRoutes() {
-  const { isAuthenticated, user } = useAuth();
-
-  if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route path="/register" element={<SignupPage />} />
-        <Route path="*" element={<LoginPage />} />
-      </Routes>
-    );
-  }
-
-  if (user?.role === 'faculty') {
-    return (
-      <AppLayout>
-        <Routes>
-          <Route path="/faculty" element={<FacultyHome />} />
-          <Route path="/faculty/apply" element={<ApplyLeave />} />
-          <Route path="/faculty/leaves" element={<MyLeaves />} />
-          <Route path="/faculty/attendance" element={<FacultyAttendance />} />
-          <Route path="/faculty/profile" element={<FacultyProfile />} />
-          <Route path="/" element={<Navigate to="/faculty" replace />} />
-          <Route path="*" element={<Navigate to="/faculty" replace />} />
-        </Routes>
-      </AppLayout>
-    );
-  }
+  // We're no longer strictly gatekeeping by `isAuthenticated` alone to prevent 
+  // flash-of-logout on Vercel SPA mobile refreshes. ProtectedRoute handles it securely.
 
   return (
-    <AppLayout>
-      <Routes>
-        <Route path="/hod" element={<HODDashboard />} />
-        <Route path="/hod/requests" element={<HODLeaveRequests />} />
-        <Route path="/hod/attendance" element={<HODFacultyAttendance />} />
-        <Route path="/hod/reports" element={<HODReports />} />
-        <Route path="/hod/profile" element={<HODProfile />} />
-        <Route path="/" element={<Navigate to="/hod" replace />} />
-        <Route path="*" element={<Navigate to="/hod" replace />} />
-      </Routes>
-    </AppLayout>
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/register" element={<SignupPage />} />
+      
+      {/* Faculty Routes */}
+      <Route path="/faculty/*" element={
+        <ProtectedRoute requiredRole="faculty">
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<FacultyHome />} />
+              <Route path="dashboard" element={<Navigate to="/faculty" replace />} />
+              <Route path="apply" element={<ApplyLeave />} />
+              <Route path="leaves" element={<MyLeaves />} />
+              <Route path="attendance" element={<FacultyAttendance />} />
+              <Route path="profile" element={<FacultyProfile />} />
+              <Route path="*" element={<Navigate to="/faculty" replace />} />
+            </Routes>
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* HOD Routes */}
+      <Route path="/hod/*" element={
+        <ProtectedRoute requiredRole="hod">
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<HODDashboard />} />
+              <Route path="dashboard" element={<Navigate to="/hod" replace />} />
+              <Route path="requests" element={<HODLeaveRequests />} />
+              <Route path="attendance" element={<HODFacultyAttendance />} />
+              <Route path="reports" element={<HODReports />} />
+              <Route path="profile" element={<HODProfile />} />
+              <Route path="*" element={<Navigate to="/hod" replace />} />
+            </Routes>
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
 
