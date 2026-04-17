@@ -81,25 +81,32 @@ export default function LoginPage() {
           </div>
 
           {/* Role toggle */}
-          <div className="flex bg-muted rounded-xl p-1">
-            {[
-              { value: 'faculty' as UserRole, label: 'Faculty', icon: GraduationCap },
-              { value: 'hod' as UserRole, label: 'HOD', icon: Shield },
-            ].map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                onClick={() => setRole(value)}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  role === value
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <Icon size={16} />
-                {label}
-              </button>
-            ))}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground flex justify-between">
+              <span>Select your role</span>
+              <span className="text-xs text-muted-foreground opacity-70">(Optional, auto-detected)</span>
+            </label>
+            <div className="flex bg-muted rounded-xl p-1">
+              {[
+                { value: 'faculty' as UserRole, label: 'Faculty', icon: GraduationCap },
+                { value: 'hod' as UserRole, label: 'HOD', icon: Shield },
+              ].map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setRole(value)}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    role === value
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Icon size={16} />
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

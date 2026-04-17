@@ -90,73 +90,84 @@ app.post('/api/debug/test-login', (req, res) => {
 
 app.post('/api/auth/login', (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
     
-    console.log('Login attempt:', { email, role });
+    console.log('Login attempt for:', email);
     
     if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Email and password required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Email and password are required'
       });
     }
     
     const db = readDb();
-    const faculty = db.faculty.find(
-      (f: any) => f.email.toLowerCase().trim() === 
-                  email.toLowerCase().trim()
+    
+    // Try all possible database structures
+    const facultyList = 
+      db?.luminaCampusDB?.faculty || 
+      db?.faculty || 
+      [];
+    
+    console.log('Total faculty in DB:', facultyList.length);
+    
+    // Case-insensitive email match
+    const faculty = facultyList.find(
+      (f: any) => 
+        f.email.toLowerCase().trim() === 
+        email.toLowerCase().trim()
     );
     
-    console.log('Faculty found:', faculty ? faculty.name : 'NOT FOUND');
-    console.log('Total faculty in DB:', db.faculty?.length || 0);
-    
     if (!faculty) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'No account found with this email address' 
+      console.log('Faculty not found for email:', email);
+      return res.status(401).json({
+        success: false,
+        error: 'No account found with email: ' + email
       });
     }
     
+    console.log('Found faculty:', faculty.name, 
+                'stored password:', faculty.password);
+    
+    // Check password
     if (faculty.password !== password) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Incorrect password. Default password is faculty123' 
+      console.log('Password mismatch for:', email);
+      return res.status(401).json({
+        success: false,
+        error: 'Incorrect password. Try: faculty123'
       });
     }
     
-    if (role && faculty.role.toLowerCase() !== role.toLowerCase()) {
-      return res.status(401).json({ 
-        success: false, 
-        error: `Wrong role selected. This account is "${faculty.role}". Please select "${faculty.role}" on the login screen.` 
-      });
-    }
+    // Generate token
+    const token = require('crypto')
+      .randomBytes(32).toString('hex');
     
-    const token = generateToken(faculty.id);
+    console.log('Login SUCCESS for:', faculty.name);
     
-    console.log('Login successful for:', faculty.name);
-    
-    // Spread faculty to avoid breaking existing UI that expects root props
     return res.json({
-      ...faculty,
       success: true,
-      token,
+      token: token,
       faculty: {
         id: faculty.id,
         name: faculty.name,
         email: faculty.email,
         role: faculty.role,
         department: faculty.department,
+        departmentId: faculty.departmentId,
         designation: faculty.designation,
         employeeId: faculty.employeeId,
         mobile: faculty.mobile,
-        avatar: faculty.avatar
+        avatar: faculty.avatar,
+        joinedYear: faculty.joinedYear,
+        gender: faculty.gender
       }
     });
+    
   } catch (err: any) {
-    console.error('Login error:', err);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Server error during login: ' + err.message 
+    console.error('Login ERROR:', err.message);
+    return res.status(500).json({
+      success: false,
+      error: 'Server error: ' + err.message
     });
   }
 });

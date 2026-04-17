@@ -30,11 +30,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
     if (email && password) {
       try {
-        const userDoc = await getAuthenticatedFaculty(email, password, role);
-        if (userDoc) {
+        const response = await getAuthenticatedFaculty(email, password, role);
+        
+        // Handle new API response format { success, token, faculty }
+        if (response && response.success && response.faculty) {
+          localStorage.setItem('lumina_token', response.token);
+          localStorage.setItem('lumina_faculty', JSON.stringify(response.faculty));
+          
           setUser({
-            ...userDoc,
-            role: userDoc.role.toLowerCase() as UserRole,
+            ...response.faculty,
+            role: response.faculty.role.toLowerCase() as UserRole,
+          });
+          return true;
+        } 
+        // Fallback for legacy format
+        else if (response && response.id) {
+          setUser({
+            ...response,
+            role: response.role.toLowerCase() as UserRole,
           });
           return true;
         }
