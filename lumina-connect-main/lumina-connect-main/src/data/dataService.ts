@@ -1,4 +1,8 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+let API_BASE = import.meta.env.VITE_API_URL || 'https://lumina-campus-api.onrender.com/api';
+// Guarantee /api suffix even if environment variable misses it
+if (API_BASE && !API_BASE.endsWith('/api')) {
+  API_BASE = `${API_BASE.replace(/\/+$/, '')}/api`;
+}
 export const getApiBase = () => API_BASE;
 
 export async function getAuthenticatedFaculty(email: string, password: string, role: string) {
