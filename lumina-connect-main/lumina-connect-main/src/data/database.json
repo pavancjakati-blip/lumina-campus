@@ -1982,6 +1982,48 @@
         "date": "2026-04-16",
         "status": "Absent",
         "markedAt": "2026-04-16T18:03:28.129Z"
+      },
+      {
+        "id": "ATT118",
+        "facultyId": "FAC001",
+        "date": "2026-04-17",
+        "status": "Absent",
+        "markedAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "ATT119",
+        "facultyId": "FAC002",
+        "date": "2026-04-17",
+        "status": "Absent",
+        "markedAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "ATT120",
+        "facultyId": "FAC006",
+        "date": "2026-04-17",
+        "status": "Absent",
+        "markedAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "ATT121",
+        "facultyId": "FAC008",
+        "date": "2026-04-17",
+        "status": "Absent",
+        "markedAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "ATT122",
+        "facultyId": "FAC009",
+        "date": "2026-04-17",
+        "status": "Absent",
+        "markedAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "ATT123",
+        "facultyId": "FAC011",
+        "date": "2026-04-17",
+        "status": "Absent",
+        "markedAt": "2026-04-17T18:09:06.478Z"
       }
     ],
     "leaveApplications": [
@@ -2611,6 +2653,66 @@
         "type": "attendance_alert",
         "read": false,
         "createdAt": "2026-04-16T18:03:28.129Z"
+      },
+      {
+        "id": "NOTIF023",
+        "toFacultyId": "FAC001",
+        "fromRole": "System",
+        "title": "Attendance Alert",
+        "body": "You have been marked Absent because you missed marking your attendance.",
+        "type": "attendance_alert",
+        "read": false,
+        "createdAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "NOTIF024",
+        "toFacultyId": "FAC002",
+        "fromRole": "System",
+        "title": "Attendance Alert",
+        "body": "You have been marked Absent because you missed marking your attendance.",
+        "type": "attendance_alert",
+        "read": false,
+        "createdAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "NOTIF025",
+        "toFacultyId": "FAC006",
+        "fromRole": "System",
+        "title": "Attendance Alert",
+        "body": "You have been marked Absent because you missed marking your attendance.",
+        "type": "attendance_alert",
+        "read": false,
+        "createdAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "NOTIF026",
+        "toFacultyId": "FAC008",
+        "fromRole": "System",
+        "title": "Attendance Alert",
+        "body": "You have been marked Absent because you missed marking your attendance.",
+        "type": "attendance_alert",
+        "read": false,
+        "createdAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "NOTIF027",
+        "toFacultyId": "FAC009",
+        "fromRole": "System",
+        "title": "Attendance Alert",
+        "body": "You have been marked Absent because you missed marking your attendance.",
+        "type": "attendance_alert",
+        "read": false,
+        "createdAt": "2026-04-17T18:09:06.478Z"
+      },
+      {
+        "id": "NOTIF028",
+        "toFacultyId": "FAC011",
+        "fromRole": "System",
+        "title": "Attendance Alert",
+        "body": "You have been marked Absent because you missed marking your attendance.",
+        "type": "attendance_alert",
+        "read": false,
+        "createdAt": "2026-04-17T18:09:06.478Z"
       }
     ]
   }
