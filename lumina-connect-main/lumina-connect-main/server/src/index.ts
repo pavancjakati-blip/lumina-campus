@@ -408,7 +408,10 @@ app.get('/api/department/:deptId/hod', (req, res) => {
 app.post('/api/attendance/mark', (req, res) => {
   const { facultyId } = req.body;
   const db = readDb();
-  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Use IST (Asia/Kolkata) for consistent date/time display
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD in IST
   
   // Check if already marked today
   const existing = db.attendance.find((a: any) => a.facultyId === facultyId && a.date === todayStr);
@@ -416,8 +419,11 @@ app.post('/api/attendance/mark', (req, res) => {
     return res.json({ success: false, already_marked: true, record: existing });
   }
 
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  // Format time in IST for display
+  const timeStr = now.toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', hour12: true,
+    timeZone: 'Asia/Kolkata'
+  });
 
   const newRecord = {
     id: generateId('ATT', db.attendance),
@@ -505,14 +511,20 @@ app.post('/api/leave/status-update', (req, res) => {
 // Automated Attendance System Background Task
 const checkAttendance = () => {
     const now = new Date();
-    const hours = now.getHours();
-    
-    // Check if it's past 10:00 AM
-    if (hours >= 10) {
+
+    // Convert to IST for accurate time-based logic
+    const istDateStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD
+    const istTimeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' }); // HH:MM:SS
+    const [istHour, istMin] = istTimeStr.split(':').map(Number);
+    const istMinutes = istHour * 60 + istMin;
+
+    // Check if it's past 4:30 PM IST (16:30 = 990 minutes)
+    if (istMinutes >= 16 * 60 + 30) {
         const db = readDb();
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStr = istDateStr;
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const todayName = days[now.getDay()];
+        // Get IST day of week
+        const istDayName = now.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Kolkata' });
         let dbChanged = false;
 
         db.faculty.forEach((fac: any) => {
@@ -521,7 +533,7 @@ const checkAttendance = () => {
             if (!hasLeaveBalance) return; 
 
             // Check if they are scheduled for today
-            const hasClassToday = db.timetable.some((tt: any) => tt.facultyId === fac.id && tt.day === todayName);
+            const hasClassToday = db.timetable.some((tt: any) => tt.facultyId === fac.id && tt.day === istDayName);
             if (hasClassToday) {
                 // Verify attendance record exists
                 const recordExists = db.attendance.some((a: any) => a.facultyId === fac.id && a.date === todayStr);
@@ -533,7 +545,7 @@ const checkAttendance = () => {
                         facultyId: fac.id,
                         date: todayStr,
                         status: "Absent",
-                        markedAt: now.toISOString()
+                        markedAt: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })
                     });
                     
                     db.notifications.push({

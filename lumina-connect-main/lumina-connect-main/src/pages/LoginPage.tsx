@@ -102,7 +102,6 @@ export default function LoginPage() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex justify-between">
               <span>Select your role</span>
-              <span className="text-xs text-muted-foreground opacity-70">(Optional, auto-detected)</span>
             </label>
             <div className="flex bg-muted rounded-xl p-1">
               {[
