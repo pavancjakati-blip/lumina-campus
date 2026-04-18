@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { LuminaLogo } from '@/components/LuminaLogo';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { getApiBase } from '@/data/dataService';
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [role, setRole] = useState<UserRole>('faculty');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,8 +26,24 @@ export default function LoginPage() {
     if (!password.trim()) { setError('Password is required'); return; }
     setLoading(true);
     try {
-      const success = await login(email, password, role);
-      if (!success) setError('Invalid credentials');
+      const result = await login(email, password, role);
+      if (result === true) {
+        // Navigate based on role returned from server (stored in localStorage)
+        try {
+          const stored = localStorage.getItem('lumina_faculty');
+          const faculty = stored ? JSON.parse(stored) : null;
+          const actualRole = faculty?.role?.toLowerCase();
+          if (actualRole === 'hod') {
+            navigate('/hod', { replace: true });
+          } else {
+            navigate('/faculty', { replace: true });
+          }
+        } catch {
+          navigate('/faculty', { replace: true });
+        }
+      } else {
+        setError('Invalid credentials. Please check your email and password.');
+      }
     } catch (err: any) {
       setError(`Error: ${err.message} [API: ${getApiBase()}]`);
     }
