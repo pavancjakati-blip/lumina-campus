@@ -168,7 +168,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-xs text-muted-foreground pt-4">
-            Lumina Campus v1.0 — National Institute of Technology
+            Lumina Campus v1.0 — SDM College of Engineering and Technology, Dharwad
           </p>
           
           <div className="text-center">

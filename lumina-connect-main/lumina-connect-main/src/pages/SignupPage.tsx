@@ -212,8 +212,11 @@ export default function SignupPage() {
                           <label className="text-xs font-medium pl-1">Department</label>
                           <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm input-3d" value={personalDetails.department} onChange={e => updatePersonal('department', e.target.value)}>
                             <option value="AIML">Artificial Intelligence &amp; Machine Learning (AIML)</option>
+                            <option value="CSE">Computer Science Engineering (CSE)</option>
                             <option value="EC">Electronics &amp; Communication Engineering (EC)</option>
                             <option value="EEE">Electrical &amp; Electronics Engineering (EEE)</option>
+                            <option value="Mechanical">Mechanical Engineering</option>
+                            <option value="Civil">Civil Engineering</option>
                             <option value="Chemical">Chemical Engineering</option>
                             <option value="ISE">Information Science Engineering (ISE)</option>
                           </select>
