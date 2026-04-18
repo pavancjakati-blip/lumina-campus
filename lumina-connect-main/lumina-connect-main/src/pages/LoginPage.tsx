@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { LuminaLogo } from '@/components/LuminaLogo';
 import { Button } from '@/components/ui/button';
@@ -172,9 +173,9 @@ export default function LoginPage() {
           
           <div className="text-center">
             <span className="text-sm text-muted-foreground">Don't have an account? </span>
-            <a href="/register" className="text-sm font-medium text-primary hover:underline">
+            <Link to="/signup" className="text-sm font-medium text-primary hover:underline">
               Sign up
-            </a>
+            </Link>
           </div>
         </div>
       </div>
