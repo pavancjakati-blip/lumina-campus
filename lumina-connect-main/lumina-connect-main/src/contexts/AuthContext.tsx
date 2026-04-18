@@ -77,6 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('lumina_token');
     localStorage.removeItem('lumina_faculty');
     setUser(null);
+    // Hard-redirect so ProtectedRoute doesn't flash a blank screen
+    window.location.replace('/login');
   };
 
   return (
