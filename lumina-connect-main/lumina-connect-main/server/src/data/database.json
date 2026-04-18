@@ -132,8 +132,8 @@
                                            },
                                            {
                                                "id":  "FAC008",
-                                               "name":  "Dr. Shailaja Shirkol",
-                                               "email":  "shailaja.shirkol@sdmcet.edu",
+                                               "name":  "Dr. Kavitha Desai",
+                                               "email":  "kavitha.desai@sdmcet.edu",
                                                "password":  "faculty123",
                                                "role":  "Faculty",
                                                "department":  "AIML",
@@ -144,7 +144,7 @@
                                                "gender":  "Female",
                                                "dateOfBirth":  "1976-12-08",
                                                "joinedYear":  "2006",
-                                               "avatar":  "SS"
+                                               "avatar":  "KD"
                                            },
                                            {
                                                "id":  "FAC009",
